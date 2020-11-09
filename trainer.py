@@ -36,7 +36,7 @@ for company in companies:
     symbol = company['code'] + '.NZ'
     stock = yfinance.Ticker(symbol)
 
-    history = stock.history(period='5y', interval='15m')
+    history = stock.history(period='5y', interval='1d')
     history = history.groupby(history.index.date, group_keys=False)
 
     histories[company['code']] = history
@@ -46,10 +46,10 @@ balance = 1000
 portfolio = []
 print('> Mock portfolio created')
 
-# go from 2017 to 2018 in 30 min intervals
+# go from 2017 to 2018 in daily intervals
 start_date = datetime(year=2017, month=1, day=1)
 end_date = datetime(year=2018, month=1, day=1)
-interval = timedelta(minutes=30)
+interval = timedelta(days=1)
 print('> Running simulation...')
 
 current_date = start_date
