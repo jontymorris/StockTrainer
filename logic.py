@@ -1,5 +1,8 @@
 import config
 
+# Example trading logic...
+# Update with your own indicators/rules.
+
 
 def get_latest_rsi(df):
     periods = df[-14:]
@@ -23,6 +26,7 @@ def get_latest_rsi(df):
     return rsi
 
 def should_buy(price, history):
+    # buy if RSI indicates oversold
     rsi = get_latest_rsi(history)
     return rsi <= 30
 
