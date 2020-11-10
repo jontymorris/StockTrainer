@@ -1,0 +1,5 @@
+git+https://github.com/jontymorris/Sharesies-API.git
+numpy
+pandas
+yfinance
+tqdm
