@@ -95,13 +95,13 @@ def perform_simulation(histories):
     portfolio = []
     print('> Mock portfolio created')
 
-    # go from 2016 to 2018 in daily intervals
-    start_date = datetime(year=2016, month=1, day=1)
-    end_date = datetime(year=2018, month=1, day=1)
+    # go from 2017 to 2020 in daily intervals
+    start_date = datetime(year=2017, month=1, day=1)
+    end_date = datetime(year=2020, month=1, day=1)
     interval = timedelta(days=1)
     print('> Running simulation...')
 
-    difference = (end_date - end_date).days
+    difference = (end_date - start_date).days
     progress = tqdm(total=difference)
 
     # keep looping until past end date and sold everything
@@ -119,9 +119,7 @@ def perform_simulation(histories):
                 portfolio, balance, keep_buying)
 
         current_date += interval
-
-        difference = (end_date - current_date).days
-        progress.update(difference)
+        progress.update(1)
     
     progress.close()
 
