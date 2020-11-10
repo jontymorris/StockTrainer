@@ -4,6 +4,7 @@ import config
 import logic
 import pandas
 import os
+from tqdm import tqdm
 from datetime import datetime, timedelta
 
 
@@ -72,7 +73,7 @@ def analyze_stock(symbol, history, portfolio, balance, keep_buying):
 
     # we own this stock and should sell
     if item and logic.should_sell(item.price, market_price):
-        print(f'# Selling {item.symbol} for ${market_price}')
+        #print(f'# Selling {item.symbol} for ${market_price}')
         transaction_value = item.get_amount(market_price)
         portfolio.remove(item)
     
@@ -81,7 +82,7 @@ def analyze_stock(symbol, history, portfolio, balance, keep_buying):
         quantity = 100
         cost = market_price * quantity
         if balance >= cost:
-            print(f'# Buying {symbol} for ${market_price}')
+            #print(f'# Buying {symbol} for ${market_price}')
             portfolio.append(PortfolioItem(symbol, market_price, quantity))
             transaction_value -= cost
     
@@ -94,11 +95,14 @@ def perform_simulation(histories):
     portfolio = []
     print('> Mock portfolio created')
 
-    # go from 2017 to 2018 in daily intervals
-    start_date = datetime(year=2017, month=1, day=1)
+    # go from 2016 to 2018 in daily intervals
+    start_date = datetime(year=2016, month=1, day=1)
     end_date = datetime(year=2018, month=1, day=1)
     interval = timedelta(days=1)
     print('> Running simulation...')
+
+    difference = (end_date - end_date).days
+    progress = tqdm(total=difference)
 
     # keep looping until past end date and sold everything
     current_date = start_date
@@ -115,6 +119,11 @@ def perform_simulation(histories):
                 portfolio, balance, keep_buying)
 
         current_date += interval
+
+        difference = (end_date - current_date).days
+        progress.update(difference)
+    
+    progress.close()
 
     returns = (balance - inital) / inital * 100
 
