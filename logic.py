@@ -37,7 +37,7 @@ def should_buy(price, history):
     
     # buy if RSI indicates oversold
     rsi = get_latest_rsi(history)
-    return rsi <= 30
+    return rsi <= 35
 
 def should_sell(original_price, market_price):
     ''' Decides if the bot should sell or not '''
