@@ -41,6 +41,8 @@ def get_histories(shares):
     histories = {}
     for company in shares:
         symbol = company['code'] + '.NZ'
+        listing_date = company['exchange_listing_date']
+
         cached_path = f'./histories/{symbol}.csv'
 
         if os.path.exists(cached_path):
@@ -52,11 +54,24 @@ def get_histories(shares):
             history = stock.history(period='5y', interval='1d')
             history.to_csv(cached_path)
 
-        histories[company['code']] = history
+        history = history[history.index >= listing_date]
+        histories[symbol] = history
 
     return histories
 
-def analyze_stock(symbol, history, portfolio, balance, keep_buying):
+def get_all_bounds(histories):
+    bounds = {}
+
+    print('> Calculating bounds')
+
+    for symbol in tqdm(histories.keys()):
+        history = histories[symbol]
+        changes = logic.get_changes(history, 3)
+        bounds[symbol] = logic.get_bounds(changes)
+    
+    return bounds
+
+def analyze_stock(symbol, history, bounds, portfolio, balance, keep_buying):
     transaction_value = 0
     
     # try to lookup the portfolio record
@@ -66,20 +81,19 @@ def analyze_stock(symbol, history, portfolio, balance, keep_buying):
     )
 
     try:
-        # try to lookup the market price 
         market_price = history[-1:].Close.values[0]
     except:
         return transaction_value
 
     # we own this stock and should sell
-    if item and logic.should_sell(item.price, market_price):
+    if item and logic.should_sell(item.price, market_price, history, bounds):
         #print(f'# Selling {item.symbol} for ${market_price}')
         transaction_value = item.get_amount(market_price)
         portfolio.remove(item)
     
     # we don't own and should buy
-    if not item and logic.should_buy(market_price, history) and keep_buying:
-        quantity = 100
+    if not item and logic.should_buy(market_price, history, bounds) and keep_buying:
+        quantity = 300
         cost = market_price * quantity
         if balance >= cost:
             #print(f'# Buying {symbol} for ${market_price}')
@@ -88,7 +102,7 @@ def analyze_stock(symbol, history, portfolio, balance, keep_buying):
     
     return transaction_value
 
-def perform_simulation(histories):
+def perform_simulation(histories, bounds):
     # give yourself $10,000
     inital = 10000
     balance = inital
@@ -96,8 +110,8 @@ def perform_simulation(histories):
     print('> Mock portfolio created')
 
     # go from 2017 to 2020 in daily intervals
-    start_date = datetime(year=2017, month=1, day=1)
-    end_date = datetime(year=2020, month=1, day=1)
+    start_date = datetime(year=2016, month=1, day=1)
+    end_date = datetime(year=2020, month=11, day=11)
     interval = timedelta(days=1)
     print('> Running simulation...')
 
@@ -116,7 +130,7 @@ def perform_simulation(histories):
             history = history[history.index <= current_date]
 
             balance += analyze_stock(symbol, history,
-                portfolio, balance, keep_buying)
+                bounds[symbol], portfolio, balance, keep_buying)
 
         current_date += interval
         progress.update(1)
@@ -131,8 +145,9 @@ def perform_simulation(histories):
 def main():
     shares = get_shares_list()
     histories = get_histories(shares)
+    bounds = get_all_bounds(histories)
 
-    perform_simulation(histories)
+    perform_simulation(histories, bounds)
 
 
 if __name__ == '__main__':
